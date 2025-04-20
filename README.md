@@ -492,41 +492,74 @@ Key Implementation Files:
 Below is a class and function diagram of the core `hunyuan_video_packed.py` implementation, which contains the main model architecture for FramePack:
 
 ```
-[HunyuanVideoTransformer3DModelPacked](diffusers_helper/models/hunyuan_video_packed.py#L723)
+HunyuanVideoTransformer3DModelPacked
 ├── Core Architecture
-│   ├── [x_embedder (HunyuanVideoPatchEmbed)](diffusers_helper/models/hunyuan_video_packed.py#L690)
-│   ├── [context_embedder (HunyuanVideoTokenRefiner)](diffusers_helper/models/hunyuan_video_packed.py#L372)
-│   ├── [time_text_embed (CombinedTimestepGuidanceTextProjEmbeddings)](diffusers_helper/models/hunyuan_video_packed.py#L215)
-│   ├── [rope (HunyuanVideoRotaryPosEmbed)](diffusers_helper/models/hunyuan_video_packed.py#L421)
-│   ├── [transformer_blocks (HunyuanVideoTransformerBlock)](diffusers_helper/models/hunyuan_video_packed.py#L604)
-│   ├── [single_transformer_blocks (HunyuanVideoSingleTransformerBlock)](diffusers_helper/models/hunyuan_video_packed.py#L530)
-│   ├── [norm_out (AdaLayerNormContinuous)](diffusers_helper/models/hunyuan_video_packed.py#L504)
+│   ├── x_embedder (HunyuanVideoPatchEmbed)
+│   ├── context_embedder (HunyuanVideoTokenRefiner)
+│   ├── time_text_embed (CombinedTimestepGuidanceTextProjEmbeddings)
+│   ├── rope (HunyuanVideoRotaryPosEmbed)
+│   ├── transformer_blocks [HunyuanVideoTransformerBlock x num_layers]
+│   ├── single_transformer_blocks [HunyuanVideoSingleTransformerBlock x num_single_layers]
+│   ├── norm_out (AdaLayerNormContinuous)
 │   └── proj_out (Linear)
 │
 ├── Key Methods
-│   ├── [process_input_hidden_states()](diffusers_helper/models/hunyuan_video_packed.py#L835) - Handles multi-resolution frame packing
-│   ├── [forward()](diffusers_helper/models/hunyuan_video_packed.py#L894) - Main forward pass with context management
-│   ├── [initialize_teacache()](diffusers_helper/models/hunyuan_video_packed.py#L818) - Sets up memory optimization
-│   └── [gradient_checkpointing_method()](diffusers_helper/models/hunyuan_video_packed.py#L828) - Manages efficient gradient computation
+│   ├── process_input_hidden_states() - Handles multi-resolution frame packing
+│   ├── forward() - Main forward pass with context management
+│   ├── initialize_teacache() - Sets up memory optimization
+│   └── gradient_checkpointing_method() - Manages efficient gradient computation
 │
 ├── Transformer Blocks
-│   ├── [HunyuanVideoTransformerBlock](diffusers_helper/models/hunyuan_video_packed.py#L604)
-│   │   ├── [norm1 (AdaLayerNormZero)](diffusers_helper/models/hunyuan_video_packed.py#L459)
-│   │   ├── [attn (Attention with HunyuanAttnProcessorFlashAttnDouble)](diffusers_helper/models/hunyuan_video_packed.py#L139)
+│   ├── HunyuanVideoTransformerBlock
+│   │   ├── norm1 (AdaLayerNormZero)
+│   │   ├── attn (Attention with HunyuanAttnProcessorFlashAttnDouble)
 │   │   └── ff (FeedForward)
 │   │
-│   └── [HunyuanVideoSingleTransformerBlock](diffusers_helper/models/hunyuan_video_packed.py#L530)
-│       ├── [norm (AdaLayerNormZeroSingle)](diffusers_helper/models/hunyuan_video_packed.py#L481)
-│       ├── [attn (Attention with HunyuanAttnProcessorFlashAttnSingle)](diffusers_helper/models/hunyuan_video_packed.py#L185)
+│   └── HunyuanVideoSingleTransformerBlock
+│       ├── norm (AdaLayerNormZeroSingle)
+│       ├── attn (Attention with HunyuanAttnProcessorFlashAttnSingle)
 │       └── proj_out (Linear)
 │
 └── Utility Functions
-    ├── [pad_for_3d_conv()](diffusers_helper/models/hunyuan_video_packed.py#L64) - Handles padding for 3D convolutions
-    ├── [center_down_sample_3d()](diffusers_helper/models/hunyuan_video_packed.py#L73) - Downsampling for multi-resolution
-    ├── [get_cu_seqlens()](diffusers_helper/models/hunyuan_video_packed.py#L82) - Manages sequence lengths
-    ├── [apply_rotary_emb_transposed()](diffusers_helper/models/hunyuan_video_packed.py#L99) - Applies rotary embeddings
-    └── [attn_varlen_func()](diffusers_helper/models/hunyuan_video_packed.py#L108) - Variable length attention function
+    ├── pad_for_3d_conv() - Handles padding for 3D convolutions
+    ├── center_down_sample_3d() - Downsampling for multi-resolution
+    ├── get_cu_seqlens() - Manages sequence lengths
+    ├── apply_rotary_emb_transposed() - Applies rotary embeddings
+    └── attn_varlen_func() - Variable length attention function
 ```
+
+## Clickable Links to Key Components
+
+### Main Class
+- [HunyuanVideoTransformer3DModelPacked](diffusers_helper/models/hunyuan_video_packed.py#L723)
+
+### Core Architecture Components
+- [HunyuanVideoPatchEmbed](diffusers_helper/models/hunyuan_video_packed.py#L690)
+- [HunyuanVideoTokenRefiner](diffusers_helper/models/hunyuan_video_packed.py#L372)
+- [CombinedTimestepGuidanceTextProjEmbeddings](diffusers_helper/models/hunyuan_video_packed.py#L215)
+- [HunyuanVideoRotaryPosEmbed](diffusers_helper/models/hunyuan_video_packed.py#L421)
+- [AdaLayerNormContinuous](diffusers_helper/models/hunyuan_video_packed.py#L504)
+
+### Key Methods
+- [process_input_hidden_states()](diffusers_helper/models/hunyuan_video_packed.py#L835) - Frame packing mechanism
+- [forward()](diffusers_helper/models/hunyuan_video_packed.py#L894) - Main model forward pass
+- [initialize_teacache()](diffusers_helper/models/hunyuan_video_packed.py#L818) - TeaCache optimization
+- [gradient_checkpointing_method()](diffusers_helper/models/hunyuan_video_packed.py#L828)
+
+### Transformer Blocks
+- [HunyuanVideoTransformerBlock](diffusers_helper/models/hunyuan_video_packed.py#L604)
+  - [AdaLayerNormZero](diffusers_helper/models/hunyuan_video_packed.py#L459)
+  - [HunyuanAttnProcessorFlashAttnDouble](diffusers_helper/models/hunyuan_video_packed.py#L139)
+- [HunyuanVideoSingleTransformerBlock](diffusers_helper/models/hunyuan_video_packed.py#L530)
+  - [AdaLayerNormZeroSingle](diffusers_helper/models/hunyuan_video_packed.py#L481)
+  - [HunyuanAttnProcessorFlashAttnSingle](diffusers_helper/models/hunyuan_video_packed.py#L185)
+
+### Utility Functions
+- [pad_for_3d_conv()](diffusers_helper/models/hunyuan_video_packed.py#L64)
+- [center_down_sample_3d()](diffusers_helper/models/hunyuan_video_packed.py#L73)
+- [get_cu_seqlens()](diffusers_helper/models/hunyuan_video_packed.py#L82)
+- [apply_rotary_emb_transposed()](diffusers_helper/models/hunyuan_video_packed.py#L99)
+- [attn_varlen_func()](diffusers_helper/models/hunyuan_video_packed.py#L108)
 
 The key innovation in this architecture is the frame packing mechanism implemented in [`process_input_hidden_states()`](diffusers_helper/models/hunyuan_video_packed.py#L835), which allows the model to handle arbitrary video lengths with constant memory usage. The method combines frames at different temporal resolutions (original, 2x, and 4x) to create a fixed-length context that compresses the video history.
 
@@ -538,25 +571,65 @@ Below is a comparison between the original Hunyuan video implementation and the 
 
 | Feature | Original Hunyuan | FramePack Modified |
 |---------|-----------------|-------------------|
-| Main Class | `HunyuanVideoTransformer3DModel` | `HunyuanVideoTransformer3DModelPacked` |
+| Main Class | `HunyuanVideoTransformer3DModel` (L821) | `HunyuanVideoTransformer3DModelPacked` (L723) |
 | Frame Context | Processes full video context, growing with video length | Uses fixed-length context through frame packing mechanism |
 | Memory Usage | Increases with video length | Constant regardless of video length |
 | Multi-resolution Support | No support for multiple resolutions | Supports multiple temporal resolutions (original, 2x, 4x downsampled) |
-| TeaCache Optimization | Not available | Implemented to reuse computations between diffusion steps |
-| Attention Implementation | Uses PyTorch 2.0's scaled_dot_product_attention | Optimized with multiple attention backends (Flash, xformers, SAGE) |
-| Key Innovation | N/A | `process_input_hidden_states()` method that combines frames at different resolutions into a fixed context |
+| TeaCache Optimization | Not available | Implemented to reuse computations between diffusion steps (L818) |
+| Attention Implementation | Uses PyTorch 2.0's scaled_dot_product_attention (L119) | Optimized with multiple attention backends (Flash, xformers, SAGE) (L108-139) |
+| Forward pass | Standard forward pass (L1025-1150) | Includes TeaCache branching logic (L894-971) |
 
-The key architectural differences:
+## Key Implementation Differences
 
-1. **Frame Packing Mechanism**: The most significant innovation is the frame packing approach that compresses the context of previous frames to maintain a constant memory footprint, which enables generation of very long videos even on resource-constrained hardware.
+1. **Frame Packing Mechanism**: 
+   - Original: Processes each frame in full context with no context compression, in `HunyuanVideoTransformer3DModel.forward()` (L1025-1150)
+   - FramePack: Implements `process_input_hidden_states()` (L835-893) which combines frames at different temporal resolutions into a fixed-size context
 
-2. **Memory Management**: The original implementation's memory requirements scale with video length, while FramePack maintains constant memory usage through the frame packing technique.
+2. **Memory Management**:
+   - Original: No management of previous frames - context grows proportionally to video length
+   - FramePack: Processes frames at different downsampling rates (1x, 2x, 4x) to maintain fixed context size in `process_input_hidden_states()` (L835-893)
+   ```python
+   # Key line showing multi-resolution context management
+   if clean_latents_2x is not None and clean_latent_2x_indices is not None:
+       # Code that packs downsampled frames at 2x resolution
+   ```
 
-3. **TeaCache Optimization**: FramePack introduces a mechanism to track changes between diffusion steps and reuse computations when possible, providing significant speedup.
+3. **TeaCache Optimization**:
+   - Original: No caching mechanism, full computation for each diffusion step
+   - FramePack: Implemented in `initialize_teacache()` (L818-826) and used in forward pass (L949-971)
+   ```python
+   # TeaCache conditional path in forward()
+   if self.enable_teacache:
+       modulated_inp = self.transformer_blocks[0].norm1(hidden_states, emb=temb)[0]
+       # Check if computation can be reused
+       if not should_calc:
+           hidden_states = hidden_states + self.previous_residual
+   ```
 
-4. **Attention Optimization**: FramePack includes support for multiple optimized attention implementations to improve performance across different hardware.
+4. **Attention Implementation**:
+   - Original: Uses only PyTorch 2.0's scaled_dot_product_attention (L119)
+   - FramePack: Implements `attn_varlen_func()` (L108-138) with support for different attention backends
+   ```python
+   # Multiple attention backend support
+   if sageattn is not None:
+       x = sageattn(q, k, v, tensor_layout='NHD')
+       return x
+   if flash_attn_func is not None:
+       x = flash_attn_func(q, k, v)
+       return x
+   ```
 
-5. **Multi-resolution Context**: FramePack handles frames at different temporal resolutions, allowing it to maintain important context from the entire video history while focusing computational resources on recent frames.
+5. **Multi-resolution Context**:
+   - Original: No multi-resolution support, processes all frames at the same resolution
+   - FramePack: Implements specific handling for various resolution contexts in `process_input_hidden_states()` (L835-893)
+   ```python
+   # Processing 4x downsampled frames
+   if clean_latents_4x is not None and clean_latent_4x_indices is not None:
+       # Downsampling and processing logic for 4x context
+       clean_latent_4x_rope_freqs = center_down_sample_3d(clean_latent_4x_rope_freqs, (4, 4, 4))
+   ```
+
+These architectural differences allow FramePack to maintain constant memory usage regardless of video length, making it possible to generate very long videos even on resource-constrained hardware.
 
 # Prompting Guideline
 
