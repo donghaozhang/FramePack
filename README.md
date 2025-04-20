@@ -284,7 +284,7 @@ Below are some more examples that you may be interested in reproducing.
 
 <img src="https://github.com/user-attachments/assets/853f4f40-2956-472f-aa7a-fa50da03ed92" width="150">
 
-`The girl suddenly took out a sign that said “cute” using right hand`
+`The girl suddenly took out a sign that said "cute" using right hand`
 
 ![image](https://github.com/user-attachments/assets/d51180e4-5537-4e25-a6c6-faecae28648a)
 
@@ -432,6 +432,131 @@ Below are some more examples that you may be interested in reproducing.
 </table>
 
 ---
+
+# Project Structure
+
+Below is the structure of the `diffusers_helper` module that contains the core components of FramePack:
+
+```
+diffusers_helper/
+├── bucket_tools.py        # Tools for bucket operations
+├── clip_vision.py         # CLIP vision model functionality
+├── dit_common.py          # Common DiT (Diffusion Transformer) components
+├── hf_login.py            # HuggingFace login utilities
+├── hunyuan.py             # HunYuan model implementation
+├── memory.py              # Memory management tools
+├── thread_utils.py        # Utilities for threading and parallel processing
+├── utils.py               # General utility functions
+├── gradio/
+│   └── progress_bar.py    # Progress bar implementation for Gradio UI
+├── k_diffusion/
+│   ├── uni_pc_fm.py       # UniPC FM sampler implementation
+│   └── wrapper.py         # K-diffusion wrapper
+├── models/
+│   └── hunyuan_video_packed.py # FramePack video generation model
+└── pipelines/
+    └── k_diffusion_hunyuan.py  # K-diffusion pipeline for HunYuan
+
+```
+
+Files in the `diffusers_helper` directory with links to key implementations:
+
+- [bucket_tools.py](diffusers_helper/bucket_tools.py): Tools for bucket operations
+- [clip_vision.py](diffusers_helper/clip_vision.py): CLIP vision model functionality
+- [dit_common.py](diffusers_helper/dit_common.py#L7): Common DiT (Diffusion Transformer) components with LayerNorm
+- [hf_login.py](diffusers_helper/hf_login.py): HuggingFace login utilities
+- [hunyuan.py](diffusers_helper/hunyuan.py#L8): HunYuan model implementation with encode_prompt_conds
+- [memory.py](diffusers_helper/memory.py#L15): Memory management tools for efficient GPU memory usage
+- [thread_utils.py](diffusers_helper/thread_utils.py#L9): Utilities for threading and parallel processing
+- [utils.py](diffusers_helper/utils.py): General utility functions
+
+Key Implementation Files:
+- **models/**
+  - [hunyuan_video_packed.py](diffusers_helper/models/hunyuan_video_packed.py#L723): **Main FramePack model** - `HunyuanVideoTransformer3DModelPacked` class
+  - [hunyuan_video_packed.py](diffusers_helper/models/hunyuan_video_packed.py#L835): Frame packing mechanism - `process_input_hidden_states()` method
+  - [hunyuan_video_packed.py](diffusers_helper/models/hunyuan_video_packed.py#L818): TeaCache optimization - `initialize_teacache()` method
+  - [hunyuan_video_packed.py](diffusers_helper/models/hunyuan_video_packed.py#L604): Transformer block implementation - `HunyuanVideoTransformerBlock` class
+
+- **pipelines/**
+  - [k_diffusion_hunyuan.py](diffusers_helper/pipelines/k_diffusion_hunyuan.py#L57): K-diffusion sampling function - `sample_hunyuan()`
+
+- **k_diffusion/**
+  - [uni_pc_fm.py](diffusers_helper/k_diffusion/uni_pc_fm.py#L36): UniPC FM sampling algorithm
+  - [wrapper.py](diffusers_helper/k_diffusion/wrapper.py#L5): K-diffusion wrapper for FramePack model
+
+- **gradio/**
+  - [progress_bar.py](diffusers_helper/gradio/progress_bar.py): Progress bar implementation for Gradio UI
+
+# FramePack Model Architecture
+
+Below is a class and function diagram of the core `hunyuan_video_packed.py` implementation, which contains the main model architecture for FramePack:
+
+```
+[HunyuanVideoTransformer3DModelPacked](diffusers_helper/models/hunyuan_video_packed.py#L723)
+├── Core Architecture
+│   ├── [x_embedder (HunyuanVideoPatchEmbed)](diffusers_helper/models/hunyuan_video_packed.py#L690)
+│   ├── [context_embedder (HunyuanVideoTokenRefiner)](diffusers_helper/models/hunyuan_video_packed.py#L372)
+│   ├── [time_text_embed (CombinedTimestepGuidanceTextProjEmbeddings)](diffusers_helper/models/hunyuan_video_packed.py#L215)
+│   ├── [rope (HunyuanVideoRotaryPosEmbed)](diffusers_helper/models/hunyuan_video_packed.py#L421)
+│   ├── [transformer_blocks (HunyuanVideoTransformerBlock)](diffusers_helper/models/hunyuan_video_packed.py#L604)
+│   ├── [single_transformer_blocks (HunyuanVideoSingleTransformerBlock)](diffusers_helper/models/hunyuan_video_packed.py#L530)
+│   ├── [norm_out (AdaLayerNormContinuous)](diffusers_helper/models/hunyuan_video_packed.py#L504)
+│   └── proj_out (Linear)
+│
+├── Key Methods
+│   ├── [process_input_hidden_states()](diffusers_helper/models/hunyuan_video_packed.py#L835) - Handles multi-resolution frame packing
+│   ├── [forward()](diffusers_helper/models/hunyuan_video_packed.py#L894) - Main forward pass with context management
+│   ├── [initialize_teacache()](diffusers_helper/models/hunyuan_video_packed.py#L818) - Sets up memory optimization
+│   └── [gradient_checkpointing_method()](diffusers_helper/models/hunyuan_video_packed.py#L828) - Manages efficient gradient computation
+│
+├── Transformer Blocks
+│   ├── [HunyuanVideoTransformerBlock](diffusers_helper/models/hunyuan_video_packed.py#L604)
+│   │   ├── [norm1 (AdaLayerNormZero)](diffusers_helper/models/hunyuan_video_packed.py#L459)
+│   │   ├── [attn (Attention with HunyuanAttnProcessorFlashAttnDouble)](diffusers_helper/models/hunyuan_video_packed.py#L139)
+│   │   └── ff (FeedForward)
+│   │
+│   └── [HunyuanVideoSingleTransformerBlock](diffusers_helper/models/hunyuan_video_packed.py#L530)
+│       ├── [norm (AdaLayerNormZeroSingle)](diffusers_helper/models/hunyuan_video_packed.py#L481)
+│       ├── [attn (Attention with HunyuanAttnProcessorFlashAttnSingle)](diffusers_helper/models/hunyuan_video_packed.py#L185)
+│       └── proj_out (Linear)
+│
+└── Utility Functions
+    ├── [pad_for_3d_conv()](diffusers_helper/models/hunyuan_video_packed.py#L64) - Handles padding for 3D convolutions
+    ├── [center_down_sample_3d()](diffusers_helper/models/hunyuan_video_packed.py#L73) - Downsampling for multi-resolution
+    ├── [get_cu_seqlens()](diffusers_helper/models/hunyuan_video_packed.py#L82) - Manages sequence lengths
+    ├── [apply_rotary_emb_transposed()](diffusers_helper/models/hunyuan_video_packed.py#L99) - Applies rotary embeddings
+    └── [attn_varlen_func()](diffusers_helper/models/hunyuan_video_packed.py#L108) - Variable length attention function
+```
+
+The key innovation in this architecture is the frame packing mechanism implemented in [`process_input_hidden_states()`](diffusers_helper/models/hunyuan_video_packed.py#L835), which allows the model to handle arbitrary video lengths with constant memory usage. The method combines frames at different temporal resolutions (original, 2x, and 4x) to create a fixed-length context that compresses the video history.
+
+The TeaCache optimization ([`initialize_teacache()`](diffusers_helper/models/hunyuan_video_packed.py#L818)) further reduces computational load by reusing certain computations when changes between diffusion steps are small, resulting in up to 2x speedup with minimal quality loss.
+
+# Comparison with Original Hunyuan Implementation
+
+Below is a comparison between the original Hunyuan video implementation and the FramePack modified version:
+
+| Feature | Original Hunyuan | FramePack Modified |
+|---------|-----------------|-------------------|
+| Main Class | `HunyuanVideoTransformer3DModel` | `HunyuanVideoTransformer3DModelPacked` |
+| Frame Context | Processes full video context, growing with video length | Uses fixed-length context through frame packing mechanism |
+| Memory Usage | Increases with video length | Constant regardless of video length |
+| Multi-resolution Support | No support for multiple resolutions | Supports multiple temporal resolutions (original, 2x, 4x downsampled) |
+| TeaCache Optimization | Not available | Implemented to reuse computations between diffusion steps |
+| Attention Implementation | Uses PyTorch 2.0's scaled_dot_product_attention | Optimized with multiple attention backends (Flash, xformers, SAGE) |
+| Key Innovation | N/A | `process_input_hidden_states()` method that combines frames at different resolutions into a fixed context |
+
+The key architectural differences:
+
+1. **Frame Packing Mechanism**: The most significant innovation is the frame packing approach that compresses the context of previous frames to maintain a constant memory footprint, which enables generation of very long videos even on resource-constrained hardware.
+
+2. **Memory Management**: The original implementation's memory requirements scale with video length, while FramePack maintains constant memory usage through the frame packing technique.
+
+3. **TeaCache Optimization**: FramePack introduces a mechanism to track changes between diffusion steps and reuse computations when possible, providing significant speedup.
+
+4. **Attention Optimization**: FramePack includes support for multiple optimized attention implementations to improve performance across different hardware.
+
+5. **Multi-resolution Context**: FramePack handles frames at different temporal resolutions, allowing it to maintain important context from the entire video history while focusing computational resources on recent frames.
 
 # Prompting Guideline
 
